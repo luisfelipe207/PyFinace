@@ -3,6 +3,7 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from .models import db
 from .routes import api
+from .database import init_db, verificar_conexao  # Importa as funções de inicialização e verificação
 from config import Config
 
 def create_app():
@@ -10,7 +11,7 @@ def create_app():
     app.config.from_object(Config)
     
     # Inicializando extensões
-    db.init_app(app)
+    init_db(app)  # Inicializa o banco de dados
     jwt = JWTManager(app)
     CORS(app)
     
@@ -22,9 +23,10 @@ def create_app():
 # Criar uma instância do aplicativo
 app = create_app()
 
-# Criar tabelas do banco de dados
-with app.app_context():
-    db.create_all()
+# Verificar conexões ativas antes de cada requisição
+@app.before_request
+def before_request():
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
 
 if __name__ == '__main__':
     app.run(debug=True) 

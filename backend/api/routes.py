@@ -1,15 +1,18 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
 from datetime import datetime
-from .models import db, Usuario, Categoria, Transacao
+from .models import Usuario, Transacao, Categoria
+from .database import get_db_session, verificar_conexao  # Importa as funções para gerenciar a conexão
 
 api = Blueprint('api', __name__)
 
-# Rotas de Autenticação
 @api.route('/auth/registro', methods=['POST'])
 def registro():
     dados = request.get_json()
     
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     if Usuario.query.filter_by(email=dados['email']).first():
         return jsonify({'erro': 'Email já cadastrado'}), 400
         
@@ -19,14 +22,17 @@ def registro():
     )
     usuario.set_senha(dados['senha'])
     
-    db.session.add(usuario)
-    db.session.commit()
+    session.add(usuario)
+    session.commit()
     
     return jsonify({'mensagem': 'Usuário registrado com sucesso'}), 201
 
 @api.route('/auth/login', methods=['POST'])
 def login():
     dados = request.get_json()
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     usuario = Usuario.query.filter_by(email=dados['email']).first()
     
     if not usuario or not usuario.verificar_senha(dados['senha']):
@@ -35,13 +41,15 @@ def login():
     access_token = create_access_token(identity=usuario.id)
     return jsonify({'token': access_token}), 200
 
-# Rotas de Transações
 @api.route('/transacoes', methods=['POST'])
 @jwt_required()
 def criar_transacao():
     usuario_id = get_jwt_identity()
     dados = request.get_json()
     
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     transacao = Transacao(
         valor=dados['valor'],
         tipo=dados['tipo'],
@@ -51,8 +59,8 @@ def criar_transacao():
         usuario_id=usuario_id
     )
     
-    db.session.add(transacao)
-    db.session.commit()
+    session.add(transacao)
+    session.commit()
     
     return jsonify({'mensagem': 'Transação criada com sucesso'}), 201
 
@@ -61,6 +69,9 @@ def criar_transacao():
 def listar_transacoes():
     usuario_id = get_jwt_identity()
     
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     filtros = request.args
     query = Transacao.query.filter_by(usuario_id=usuario_id)
     
@@ -87,6 +98,10 @@ def listar_transacoes():
 @jwt_required()
 def atualizar_transacao(id):
     usuario_id = get_jwt_identity()
+    
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     transacao = Transacao.query.filter_by(id=id, usuario_id=usuario_id).first()
     
     if not transacao:
@@ -101,53 +116,60 @@ def atualizar_transacao(id):
         transacao.data_transacao = datetime.strptime(dados['data_transacao'], '%Y-%m-%d').date()
     transacao.categoria_id = dados.get('categoria_id', transacao.categoria_id)
     
-    db.session.commit()
+    session.commit()
     return jsonify({'mensagem': 'Transação atualizada com sucesso'}), 200
 
 @api.route('/transacoes/<int:id>', methods=['DELETE'])
 @jwt_required()
 def deletar_transacao(id):
     usuario_id = get_jwt_identity()
+    
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     transacao = Transacao.query.filter_by(id=id, usuario_id=usuario_id).first()
     
     if not transacao:
         return jsonify({'erro': 'Transação não encontrada'}), 404
         
-    db.session.delete(transacao)
-    db.session.commit()
+    session.delete(transacao)
+    session.commit()
     return jsonify({'mensagem': 'Transação deletada com sucesso'}), 200
 
-# Rotas de Categorias
 @api.route('/categorias', methods=['POST'])
 @jwt_required()
 def criar_categoria():
     usuario_id = get_jwt_identity()
     dados = request.get_json()
     
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     categoria = Categoria(
         nome=dados['nome'],
         categoria_pai_id=dados.get('categoria_pai_id'),
         usuario_id=usuario_id
     )
     
-    db.session.add(categoria)
-    db.session.commit()
+    session.add(categoria)
+    session.commit()
     
     return jsonify({'mensagem': 'Categoria criada com sucesso'}), 201
 
 @api.route('/categorias', methods=['GET'])
 @jwt_required()
 def listar_categorias():
-    usuario_id = get_jwt_identity()
+    usuario_id = get_jwt_identity()  # Obtém o ID do usuário do token
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     categorias = Categoria.query.filter_by(usuario_id=usuario_id).all()
-    
     return jsonify([{
         'id': c.id,
         'nome': c.nome,
         'categoria_pai_id': c.categoria_pai_id
     } for c in categorias]), 200
 
-# Rotas de Relatórios
 @api.route('/relatorios/fluxo', methods=['GET'])
 @jwt_required()
 def relatorio_fluxo():
@@ -155,6 +177,20 @@ def relatorio_fluxo():
     data_inicio = request.args.get('data_inicio')
     data_fim = request.args.get('data_fim')
     
+    # Verifica se as datas estão no formato correto
+    if not data_inicio or not data_fim:
+        return jsonify({'erro': 'As datas de início e fim são obrigatórias.'}), 400
+
+    try:
+        # Tente converter as datas para o formato correto
+        data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d')
+        data_fim = datetime.strptime(data_fim, '%Y-%m-%d')
+    except ValueError:
+        return jsonify({'erro': 'Formato de data inválido. Use YYYY-MM-DD.'}), 422
+
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     query = Transacao.query.filter_by(usuario_id=usuario_id)
     
     if data_inicio:
@@ -187,6 +223,9 @@ def relatorio_categorias():
     data_inicio = request.args.get('data_inicio')
     data_fim = request.args.get('data_fim')
     
+    verificar_conexao()  # Verifica e fecha a conexão se necessário
+    session = get_db_session()  # Obtém a sessão do banco de dados
+
     categorias = Categoria.query.filter_by(usuario_id=usuario_id).all()
     resultado = []
     
