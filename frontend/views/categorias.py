@@ -1,5 +1,5 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
+import customtkinter as ctk
+from tkinter import messagebox
 from typing import TYPE_CHECKING, Optional, Dict
 
 if TYPE_CHECKING:
@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 class CategoriaDialog:
     def __init__(self, parent, controller, categoria: Optional[Dict] = None):
-        self.dialog = tk.Toplevel(parent)
+        self.dialog = ctk.CTkToplevel(parent)
         self.dialog.title("Nova Categoria" if not categoria else "Editar Categoria")
         self.dialog.geometry("400x250")
         self.controller = controller
@@ -25,22 +25,22 @@ class CategoriaDialog:
     
     def criar_widgets(self):
         # Nome
-        ttk.Label(self.dialog, text="Nome:").grid(row=0, column=0, pady=5, padx=5, sticky="e")
-        self.nome_entry = ttk.Entry(self.dialog, width=30)
+        ctk.CTkLabel(self.dialog, text="Nome:").grid(row=0, column=0, pady=5, padx=5, sticky="e")
+        self.nome_entry = ctk.CTkEntry(self.dialog, width=30)
         self.nome_entry.grid(row=0, column=1, pady=5, padx=5)
         
         # Categoria Pai (opcional)
-        ttk.Label(self.dialog, text="Categoria Pai:").grid(row=1, column=0, pady=5, padx=5, sticky="e")
-        self.categoria_pai_combobox = ttk.Combobox(self.dialog, state="readonly")
+        ctk.CTkLabel(self.dialog, text="Categoria Pai:").grid(row=1, column=0, pady=5, padx=5, sticky="e")
+        self.categoria_pai_combobox = ctk.CTkComboBox(self.dialog, state="readonly")
         self.categoria_pai_combobox.grid(row=1, column=1, pady=5, padx=5)
         self.carregar_categorias()
         
         # Botões
-        btn_frame = ttk.Frame(self.dialog)
+        btn_frame = ctk.CTkFrame(self.dialog)
         btn_frame.grid(row=2, column=0, columnspan=2, pady=20)
         
-        ttk.Button(btn_frame, text="Salvar", command=self.salvar).pack(side="left", padx=5)
-        ttk.Button(btn_frame, text="Cancelar", command=self.cancelar).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Salvar", command=self.salvar).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Cancelar", command=self.cancelar).pack(side="left", padx=5)
     
     def carregar_categorias(self):
         try:
@@ -84,29 +84,36 @@ class CategoriaDialog:
     def cancelar(self):
         self.dialog.destroy()
 
-class CategoriasView(ttk.Frame):
+class CategoriasView(ctk.CTkFrame):
     def __init__(self, parent, controller: 'MainApplication'):
         super().__init__(parent)
         self.controller = controller
         
         # Frame superior com botões
-        btn_frame = ttk.Frame(self)
+        btn_frame = ctk.CTkFrame(self)
         btn_frame.pack(fill="x", padx=10, pady=5)
         
-        ttk.Button(btn_frame, text="Nova Categoria", command=self.nova_categoria).pack(side="left", padx=5)
-        ttk.Button(btn_frame, text="Editar", command=self.editar_categoria).pack(side="left", padx=5)
-        ttk.Button(btn_frame, text="Excluir", command=self.excluir_categoria).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Nova Categoria", command=self.nova_categoria).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Editar", command=self.editar_categoria).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Excluir", command=self.excluir_categoria).pack(side="left", padx=5)
         
-        # Treeview para listar categorias
-        self.tree = ttk.Treeview(self, columns=("nome", "categoria_pai"), show="headings")
+        # Frame para filtros
+        filtros_frame = ctk.CTkFrame(self)
+        filtros_frame.pack(fill="x", padx=10, pady=5)
+        
+        # Para a Treeview, você pode usar um widget de tabela padrão ou um Frame
+        self.tree = ctk.CTkFrame(self)  # Use CTkFrame como contêiner
         self.tree.pack(fill="both", expand=True, padx=10, pady=5)
+        
+        # Adicione um Label para o título
+        ctk.CTkLabel(self.tree, text="Categorias", font=("Helvetica", 14, "bold")).pack(pady=10)
         
         # Configurar colunas
         self.tree.heading("nome", text="Nome")
         self.tree.heading("categoria_pai", text="Categoria Pai")
         
         # Scrollbar
-        scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.tree.yview)
+        scrollbar = ctk.CTkScrollbar(self, orient="vertical", command=self.tree.yview)
         scrollbar.pack(side="right", fill="y")
         self.tree.configure(yscrollcommand=scrollbar.set)
     

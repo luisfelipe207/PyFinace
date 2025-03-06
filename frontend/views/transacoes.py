@@ -1,5 +1,5 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
+import customtkinter as ctk
+from tkinter import messagebox
 from typing import TYPE_CHECKING, Optional, Dict
 from datetime import datetime
 from tkcalendar import DateEntry
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class TransacaoDialog:
     def __init__(self, parent, controller, transacao: Optional[Dict] = None):
-        self.dialog = tk.Toplevel(parent)
+        self.dialog = ctk.CTkToplevel(parent)
         self.dialog.title("Nova Transação" if not transacao else "Editar Transação")
         self.dialog.geometry("400x350")
         self.controller = controller
@@ -27,38 +27,38 @@ class TransacaoDialog:
     
     def criar_widgets(self):
         # Tipo de Transação
-        ttk.Label(self.dialog, text="Tipo:").grid(row=0, column=0, pady=5, padx=5, sticky="e")
-        self.tipo_var = tk.StringVar(value="receita")
-        ttk.Radiobutton(self.dialog, text="Receita", variable=self.tipo_var, value="receita").grid(row=0, column=1, pady=5, sticky="w")
-        ttk.Radiobutton(self.dialog, text="Despesa", variable=self.tipo_var, value="despesa").grid(row=0, column=2, pady=5, sticky="w")
+        ctk.CTkLabel(self.dialog, text="Tipo:").grid(row=0, column=0, pady=5, padx=5, sticky="e")
+        self.tipo_var = ctk.StringVar(value="receita")
+        ctk.CTkRadioButton(self.dialog, text="Receita", variable=self.tipo_var, value="receita").grid(row=0, column=1, pady=5, sticky="w")
+        ctk.CTkRadioButton(self.dialog, text="Despesa", variable=self.tipo_var, value="despesa").grid(row=0, column=2, pady=5, sticky="w")
         
         # Valor
-        ttk.Label(self.dialog, text="Valor (R$):").grid(row=1, column=0, pady=5, padx=5, sticky="e")
-        self.valor_entry = ttk.Entry(self.dialog)
+        ctk.CTkLabel(self.dialog, text="Valor (R$):").grid(row=1, column=0, pady=5, padx=5, sticky="e")
+        self.valor_entry = ctk.CTkEntry(self.dialog)
         self.valor_entry.grid(row=1, column=1, columnspan=2, pady=5, padx=5, sticky="ew")
         
         # Data
-        ttk.Label(self.dialog, text="Data:").grid(row=2, column=0, pady=5, padx=5, sticky="e")
+        ctk.CTkLabel(self.dialog, text="Data:").grid(row=2, column=0, pady=5, padx=5, sticky="e")
         self.data_entry = DateEntry(self.dialog, width=20, locale='pt_BR')
         self.data_entry.grid(row=2, column=1, columnspan=2, pady=5, padx=5, sticky="ew")
         
         # Categoria
-        ttk.Label(self.dialog, text="Categoria:").grid(row=3, column=0, pady=5, padx=5, sticky="e")
-        self.categoria_combobox = ttk.Combobox(self.dialog, state="readonly")
+        ctk.CTkLabel(self.dialog, text="Categoria:").grid(row=3, column=0, pady=5, padx=5, sticky="e")
+        self.categoria_combobox = ctk.CTkComboBox(self.dialog, state="readonly")
         self.categoria_combobox.grid(row=3, column=1, columnspan=2, pady=5, padx=5, sticky="ew")
         self.carregar_categorias()
         
         # Descrição
-        ttk.Label(self.dialog, text="Descrição:").grid(row=4, column=0, pady=5, padx=5, sticky="e")
-        self.descricao_text = tk.Text(self.dialog, height=4, width=30)
+        ctk.CTkLabel(self.dialog, text="Descrição:").grid(row=4, column=0, pady=5, padx=5, sticky="e")
+        self.descricao_text = ctk.CTkTextbox(self.dialog, height=4, width=30)
         self.descricao_text.grid(row=4, column=1, columnspan=2, pady=5, padx=5, sticky="ew")
         
         # Botões
-        btn_frame = ttk.Frame(self.dialog)
+        btn_frame = ctk.CTkFrame(self.dialog)
         btn_frame.grid(row=5, column=0, columnspan=3, pady=20)
         
-        ttk.Button(btn_frame, text="Salvar", command=self.salvar).pack(side="left", padx=5)
-        ttk.Button(btn_frame, text="Cancelar", command=self.cancelar).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Salvar", command=self.salvar).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Cancelar", command=self.cancelar).pack(side="left", padx=5)
     
     def carregar_categorias(self):
         try:
@@ -110,43 +110,43 @@ class TransacaoDialog:
     def cancelar(self):
         self.dialog.destroy()
 
-class TransacoesView(ttk.Frame):
+class TransacoesView(ctk.CTkFrame):
     def __init__(self, parent, controller: 'MainApplication'):
         super().__init__(parent)
         self.controller = controller
         
         # Frame superior com botões
-        btn_frame = ttk.Frame(self)
+        btn_frame = ctk.CTkFrame(self)
         btn_frame.pack(fill="x", padx=10, pady=5)
         
-        ttk.Button(btn_frame, text="Nova Transação", command=self.nova_transacao).pack(side="left", padx=5)
-        ttk.Button(btn_frame, text="Editar", command=self.editar_transacao).pack(side="left", padx=5)
-        ttk.Button(btn_frame, text="Excluir", command=self.excluir_transacao).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Nova Transação", command=self.nova_transacao).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Editar", command=self.editar_transacao).pack(side="left", padx=5)
+        ctk.CTkButton(btn_frame, text="Excluir", command=self.excluir_transacao).pack(side="left", padx=5)
         
         # Frame de filtros
-        filtros_frame = ttk.LabelFrame(self, text="Filtros")
+        filtros_frame = ctk.CTkLabelFrame(self, text="Filtros")
         filtros_frame.pack(fill="x", padx=10, pady=5)
         
         # Data inicial
-        ttk.Label(filtros_frame, text="De:").pack(side="left", padx=5)
+        ctk.CTkLabel(filtros_frame, text="De:").pack(side="left", padx=5)
         self.data_inicio = DateEntry(filtros_frame, width=12, locale='pt_BR')
         self.data_inicio.pack(side="left", padx=5)
         
         # Data final
-        ttk.Label(filtros_frame, text="Até:").pack(side="left", padx=5)
+        ctk.CTkLabel(filtros_frame, text="Até:").pack(side="left", padx=5)
         self.data_fim = DateEntry(filtros_frame, width=12, locale='pt_BR')
         self.data_fim.pack(side="left", padx=5)
         
         # Tipo
-        ttk.Label(filtros_frame, text="Tipo:").pack(side="left", padx=5)
-        self.tipo_filtro = ttk.Combobox(filtros_frame, values=["Todos", "Receita", "Despesa"], state="readonly", width=10)
+        ctk.CTkLabel(filtros_frame, text="Tipo:").pack(side="left", padx=5)
+        self.tipo_filtro = ctk.CTkComboBox(filtros_frame, values=["Todos", "Receita", "Despesa"], state="readonly", width=10)
         self.tipo_filtro.set("Todos")
         self.tipo_filtro.pack(side="left", padx=5)
         
-        ttk.Button(filtros_frame, text="Filtrar", command=self.atualizar).pack(side="left", padx=5)
+        ctk.CTkButton(filtros_frame, text="Filtrar", command=self.atualizar).pack(side="left", padx=5)
         
         # Treeview para listar transações
-        self.tree = ttk.Treeview(self, columns=("data", "tipo", "valor", "categoria", "descricao"), show="headings")
+        self.tree = ctk.CTkTreeview(self, columns=("data", "tipo", "valor", "categoria", "descricao"), show="headings")
         self.tree.pack(fill="both", expand=True, padx=10, pady=5)
         
         # Configurar colunas
@@ -157,7 +157,7 @@ class TransacoesView(ttk.Frame):
         self.tree.heading("descricao", text="Descrição")
         
         # Scrollbar
-        scrollbar = ttk.Scrollbar(self, orient="vertical", command=self.tree.yview)
+        scrollbar = ctk.CTkScrollbar(self, orient="vertical", command=self.tree.yview)
         scrollbar.pack(side="right", fill="y")
         self.tree.configure(yscrollcommand=scrollbar.set)
     

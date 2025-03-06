@@ -1,6 +1,7 @@
 import requests
 from typing import Optional, Dict, Any
 import json
+from urllib.parse import quote  # Importa a função para codificar URLs
 
 class APIClient:
     def __init__(self, base_url: str):
@@ -100,6 +101,11 @@ class APIClient:
     
     def obter_relatorio_fluxo(self, filtros: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Obtém o relatório de fluxo de caixa"""
+        if filtros:
+            # Codifica as datas para a URL
+            filtros['data_inicio'] = quote(filtros['data_inicio'])
+            filtros['data_fim'] = quote(filtros['data_fim'])
+        
         response = requests.get(
             f'{self.base_url}/relatorios/fluxo',
             headers=self.get_headers(),
@@ -110,6 +116,10 @@ class APIClient:
     
     def obter_relatorio_categorias(self, filtros: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Obtém o relatório por categorias"""
+        if filtros:
+            filtros['data_inicio'] = quote(filtros['data_inicio'])
+            filtros['data_fim'] = quote(filtros['data_fim'])
+        
         response = requests.get(
             f'{self.base_url}/relatorios/categorias',
             headers=self.get_headers(),

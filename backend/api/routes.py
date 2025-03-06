@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_tok
 from datetime import datetime
 from .models import Usuario, Transacao, Categoria
 from .database import get_db_session, verificar_conexao  # Importa as funções para gerenciar a conexão
+from urllib.parse import quote  # Importa a função para codificar URLs
 
 api = Blueprint('api', __name__)
 
@@ -179,7 +180,7 @@ def relatorio_fluxo():
     
     # Verifica se as datas estão no formato correto
     if not data_inicio or not data_fim:
-        return jsonify({'erro': 'As datas de início e fim são obrigatórias.'}), 400
+        return jsonify({'erro': 'As datas de início e fim são obrigatórias.'}), 422
 
     try:
         # Tente converter as datas para o formato correto
@@ -191,15 +192,16 @@ def relatorio_fluxo():
     verificar_conexao()  # Verifica e fecha a conexão se necessário
     session = get_db_session()  # Obtém a sessão do banco de dados
 
-    query = Transacao.query.filter_by(usuario_id=usuario_id)
-    
-    if data_inicio:
-        query = query.filter(Transacao.data_transacao >= data_inicio)
-    if data_fim:
-        query = query.filter(Transacao.data_transacao <= data_fim)
-        
-    transacoes = query.all()
-    
+    # Obtém as transações do banco de dados
+    transacoes = Transacao.query.filter_by(usuario_id=usuario_id).filter(
+        Transacao.data_transacao >= data_inicio,
+        Transacao.data_transacao <= data_fim
+    ).all()
+
+    # Verifica se as transações estão vazias
+    if not transacoes:
+        return jsonify({'mensagem': 'Nenhuma transação encontrada para o período especificado.'}), 200
+
     receitas = sum(float(t.valor) for t in transacoes if t.tipo == 'receita')
     despesas = sum(float(t.valor) for t in transacoes if t.tipo == 'despesa')
     saldo = receitas - despesas

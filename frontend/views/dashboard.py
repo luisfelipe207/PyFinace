@@ -1,43 +1,55 @@
-import tkinter as tk
-from tkinter import ttk
+import customtkinter as ctk
 from typing import TYPE_CHECKING
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from datetime import datetime, timedelta
+from tkinter import messagebox
 
 if TYPE_CHECKING:
     from main import MainApplication
 
-class DashboardView(ttk.Frame):
+class DashboardView(ctk.CTkFrame):
     def __init__(self, parent, controller: 'MainApplication'):
         super().__init__(parent)
         self.controller = controller
         
         # Container superior para resumo financeiro
-        resumo_frame = ttk.LabelFrame(self, text="Resumo Financeiro")
+        resumo_frame = ctk.CTkFrame(self, border_width=2)
         resumo_frame.pack(fill="x", padx=10, pady=5)
         
+        # Título do resumo
+        titulo_resumo = ctk.CTkLabel(resumo_frame, text="Resumo Financeiro", font=("Helvetica", 14, "bold"))
+        titulo_resumo.pack(pady=10)
+        
         # Saldo, Receitas e Despesas
-        self.saldo_label = ttk.Label(resumo_frame, text="Saldo: R$ 0,00", font=("Helvetica", 12, "bold"))
+        self.saldo_label = ctk.CTkLabel(resumo_frame, text="Saldo: R$ 0,00", font=("Helvetica", 12, "bold"))
         self.saldo_label.pack(side="left", padx=20, pady=10)
         
-        self.receitas_label = ttk.Label(resumo_frame, text="Receitas: R$ 0,00", font=("Helvetica", 12))
+        self.receitas_label = ctk.CTkLabel(resumo_frame, text="Receitas: R$ 0,00", font=("Helvetica", 12))
         self.receitas_label.pack(side="left", padx=20, pady=10)
         
-        self.despesas_label = ttk.Label(resumo_frame, text="Despesas: R$ 0,00", font=("Helvetica", 12))
+        self.despesas_label = ctk.CTkLabel(resumo_frame, text="Despesas: R$ 0,00", font=("Helvetica", 12))
         self.despesas_label.pack(side="left", padx=20, pady=10)
         
         # Container para gráficos
-        graficos_frame = ttk.Frame(self)
+        graficos_frame = ctk.CTkFrame(self)
         graficos_frame.pack(fill="both", expand=True, padx=10, pady=5)
         
         # Frame para o gráfico de fluxo
-        self.fluxo_frame = ttk.LabelFrame(graficos_frame, text="Fluxo de Caixa")
+        self.fluxo_frame = ctk.CTkFrame(graficos_frame, border_width=2)
         self.fluxo_frame.pack(side="left", fill="both", expand=True, padx=5)
         
+        # Título do gráfico de fluxo
+        titulo_fluxo = ctk.CTkLabel(self.fluxo_frame, text="Fluxo de Caixa", font=("Helvetica", 14, "bold"))
+        titulo_fluxo.pack(pady=10)
+        
         # Frame para o gráfico de categorias
-        self.categorias_frame = ttk.LabelFrame(graficos_frame, text="Distribuição por Categorias")
+        self.categorias_frame = ctk.CTkFrame(graficos_frame, border_width=2)
         self.categorias_frame.pack(side="right", fill="both", expand=True, padx=5)
+        
+        # Título do gráfico de categorias
+        titulo_categorias = ctk.CTkLabel(self.categorias_frame, text="Distribuição por Categorias", font=("Helvetica", 14, "bold"))
+        titulo_categorias.pack(pady=10)
         
         # Criar gráficos iniciais
         self.criar_graficos()
@@ -61,11 +73,23 @@ class DashboardView(ttk.Frame):
             data_fim = datetime.now()
             data_inicio = data_fim - timedelta(days=30)
             
+            # Formata as datas corretamente
+            data_inicio_str = data_inicio.strftime('%Y-%m-%d')
+            data_fim_str = data_fim.strftime('%Y-%m-%d')
+            
             # Obtém relatório de fluxo
             fluxo = self.controller.api_client.obter_relatorio_fluxo({
-                'data_inicio': data_inicio.strftime('%Y-%m-%d'),
-                'data_fim': data_fim.strftime('%Y-%m-%d')
+                'data_inicio': data_inicio_str,
+                'data_fim': data_fim_str
             })
+            
+            # Verifica se a resposta contém uma mensagem
+            if 'mensagem' in fluxo:
+                messagebox.showinfo("Informação", fluxo['mensagem'])
+                self.saldo_label.config(text="Saldo: R$ 0,00")
+                self.receitas_label.config(text="Receitas: R$ 0,00")
+                self.despesas_label.config(text="Despesas: R$ 0,00")
+                return
             
             # Atualiza labels
             self.saldo_label.config(text=f"Saldo: R$ {fluxo['saldo']:.2f}")
@@ -77,9 +101,15 @@ class DashboardView(ttk.Frame):
             
             # Obtém e atualiza gráfico de categorias
             categorias = self.controller.api_client.obter_relatorio_categorias({
-                'data_inicio': data_inicio.strftime('%Y-%m-%d'),
-                'data_fim': data_fim.strftime('%Y-%m-%d')
+                'data_inicio': data_inicio_str,
+                'data_fim': data_fim_str
             })
+            
+            # Verifica se as categorias contêm dados
+            if 'mensagem' in categorias:
+                messagebox.showinfo("Informação", categorias['mensagem'])
+                return
+            
             self.atualizar_grafico_categorias(categorias)
             
         except Exception as e:

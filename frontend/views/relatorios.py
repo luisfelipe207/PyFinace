@@ -1,5 +1,5 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
+import customtkinter as ctk
+from tkinter import messagebox
 from typing import TYPE_CHECKING
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -11,43 +11,43 @@ from tkinter import filedialog
 if TYPE_CHECKING:
     from main import MainApplication
 
-class RelatoriosView(ttk.Frame):
+class RelatoriosView(ctk.CTkFrame):
     def __init__(self, parent, controller: 'MainApplication'):
         super().__init__(parent)
         self.controller = controller
         
         # Frame de filtros
-        filtros_frame = ttk.LabelFrame(self, text="Período")
+        filtros_frame = ctk.CTkFrame(self)
         filtros_frame.pack(fill="x", padx=10, pady=5)
         
         # Data inicial
-        ttk.Label(filtros_frame, text="De:").pack(side="left", padx=5)
+        ctk.CTkLabel(filtros_frame, text="De:").pack(side="left", padx=5)
         self.data_inicio = DateEntry(filtros_frame, width=12, locale='pt_BR')
         self.data_inicio.pack(side="left", padx=5)
         
         # Data final
-        ttk.Label(filtros_frame, text="Até:").pack(side="left", padx=5)
+        ctk.CTkLabel(filtros_frame, text="Até:").pack(side="left", padx=5)
         self.data_fim = DateEntry(filtros_frame, width=12, locale='pt_BR')
         self.data_fim.pack(side="left", padx=5)
         
         # Botão de atualizar
-        ttk.Button(filtros_frame, text="Atualizar", command=self.atualizar).pack(side="left", padx=5)
-        ttk.Button(filtros_frame, text="Exportar CSV", command=self.exportar_csv).pack(side="right", padx=5)
+        ctk.CTkButton(filtros_frame, text="Atualizar", command=self.atualizar).pack(side="left", padx=5)
+        ctk.CTkButton(filtros_frame, text="Exportar CSV", command=self.exportar_csv).pack(side="right", padx=5)
         
         # Container para gráficos
-        self.notebook = ttk.Notebook(self)
+        self.notebook = ctk.CTkNotebook(self)
         self.notebook.pack(fill="both", expand=True, padx=10, pady=5)
         
         # Aba de Fluxo de Caixa
-        self.fluxo_frame = ttk.Frame(self.notebook)
+        self.fluxo_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.fluxo_frame, text="Fluxo de Caixa")
         
         # Aba de Categorias
-        self.categorias_frame = ttk.Frame(self.notebook)
+        self.categorias_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.categorias_frame, text="Categorias")
         
         # Aba de Resumo
-        self.resumo_frame = ttk.Frame(self.notebook)
+        self.resumo_frame = ctk.CTkFrame(self.notebook)
         self.notebook.add(self.resumo_frame, text="Resumo")
         
         # Criar gráficos
@@ -71,21 +71,21 @@ class RelatoriosView(ttk.Frame):
     def criar_resumo(self):
         """Cria a área de resumo financeiro"""
         # Frame para valores
-        valores_frame = ttk.Frame(self.resumo_frame)
+        valores_frame = ctk.CTkFrame(self.resumo_frame)
         valores_frame.pack(fill="x", padx=10, pady=5)
         
         # Labels para valores
-        self.receitas_label = ttk.Label(valores_frame, text="Receitas Totais: R$ 0,00", font=("Helvetica", 12))
+        self.receitas_label = ctk.CTkLabel(valores_frame, text="Receitas Totais: R$ 0,00", font=("Helvetica", 12))
         self.receitas_label.pack(pady=5)
         
-        self.despesas_label = ttk.Label(valores_frame, text="Despesas Totais: R$ 0,00", font=("Helvetica", 12))
+        self.despesas_label = ctk.CTkLabel(valores_frame, text="Despesas Totais: R$ 0,00", font=("Helvetica", 12))
         self.despesas_label.pack(pady=5)
         
-        self.saldo_label = ttk.Label(valores_frame, text="Saldo: R$ 0,00", font=("Helvetica", 12, "bold"))
+        self.saldo_label = ctk.CTkLabel(valores_frame, text="Saldo: R$ 0,00", font=("Helvetica", 12, "bold"))
         self.saldo_label.pack(pady=5)
         
         # Treeview para detalhes por categoria
-        self.tree = ttk.Treeview(self.resumo_frame, columns=("categoria", "receitas", "despesas", "saldo"), show="headings")
+        self.tree = ctk.CTkTreeview(self.resumo_frame, columns=("categoria", "receitas", "despesas", "saldo"), show="headings")
         self.tree.pack(fill="both", expand=True, padx=10, pady=5)
         
         # Configurar colunas
